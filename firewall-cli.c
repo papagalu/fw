@@ -7,15 +7,7 @@
 
 struct rule_struct rule;
 
-bool check_rule_integrity () {
-    return false;
-}
-
 bool send_to_firewall () {
-    return false;
-}
-
-bool print_rule () {
     return false;
 }
 
@@ -27,11 +19,22 @@ bool add_rule () {
     return false;
 }
 
+void print_rule () {
+   printf("in out %d\n", rule.inbound_outbound);
+   printf("source ip %s\n", rule.source_ip);
+   printf("source netmask %s\n", rule.source_netmask);
+   printf("source port %s\n", rule.source_port);
+   printf("destination ip %s\n", rule.destination_ip);
+   printf("destination netmask %s\n", rule.destination_netmask);
+   printf("destination port %s\n", rule.destination_port);
+   printf("rule action %s\n", rule.action);
+}
+
 
 int main(int argc, char **argv) {
 
     int c;
-    int action;
+    int action = -1;
 
     rule.inbound_outbound = -1;
     rule.source_ip = NULL;
@@ -107,10 +110,8 @@ int main(int argc, char **argv) {
         }
     }
 
-    if (!check_rule_integrity()) {
-        printf("Bad rule!");
-        exit(2);
-    }
+    printf("action to be executed is: %d\n", action);
+    print_rule();
 
     switch (action) {
         case 0:
@@ -125,5 +126,4 @@ int main(int argc, char **argv) {
         default:
             break;
     }
-
 }
