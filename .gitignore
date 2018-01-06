@@ -2,3 +2,11 @@ a.out
 
 *.swp
 *.o
+*.ko
+
+*.order
+*.symvers
+*.cmd
+*.mod.*
+
+.tmp_versions/
