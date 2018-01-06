@@ -1,7 +1,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
- 
+
+static struct rule_struct {
+    char *source_ip;
+    char *source_netmask;
+    char *source_port;
+    char *destination_ip;
+    char *destination_netmask;
+    char *destination_port;
+} rule;
+
+int send_to_firewall () {
+
+}
+
 
 int main(int argc, char **argv) {
     int c;
