@@ -16,4 +16,4 @@ the kernel module will implement the hook function for netfilter
 - [x] implement basic getopt_long()
 - [x] implement a basic kernel module
 - [ ] get started with netfilter hooks
-- [ ] communicate between kernelspace and userspace with procfs
+- [x] communicate between kernelspace and userspace with procfs

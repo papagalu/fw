@@ -81,7 +81,7 @@ char *ip_int_to_str (unsigned int ip) {
 
     char *ip_str = malloc(sizeof(char) * 15);
 
-    sprintf(ip_str, "%d.%d.%d.%d\n", bytes[3], bytes[2], bytes[1], bytes[0]);
+    sprintf(ip_str, "%d.%d.%d.%d", bytes[3], bytes[2], bytes[1], bytes[0]);
 
     return ip_str;
 }
@@ -108,8 +108,7 @@ char * get_protocol_to_str (int option) {
             sprintf(buff, "TCP");
             break;
         default:
-            free(buff);
-            buff = NULL;
+            buff = "NONE";
     }
     return buff;
 }
@@ -146,8 +145,7 @@ char * get_action_to_str (int option) {
             sprintf(buff, "UNBLOCK");
             break;
         default:
-            free(buff);
-            buff = NULL;
+            buff = "NONE";
     }
     return buff;
 }

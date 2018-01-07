@@ -8,6 +8,7 @@
 struct rule_struct rule;
 struct rule_struct_u rule_u;
 char *rule_number;
+int num;
 
 FILE * open_fd (char *path, char *permissions) {
     FILE *fd = fopen(path, permissions);
@@ -58,6 +59,18 @@ void convert_rule_to_u (void) {
     rule_u.action = get_action_to_int(rule.action);
 }
 
+void convert_rule_from_u (void) {
+    rule.inbound_outbound = rule_u.inbound_outbound - '0';
+    rule.source_ip = ip_int_to_str(rule_u.source_ip);
+    rule.source_netmask = ip_int_to_str(rule_u.source_netmask);
+    rule.source_port = port_int_to_str(rule_u.source_port);
+    rule.destination_ip = ip_int_to_str(rule_u.destination_ip);
+    rule.destination_netmask = ip_int_to_str(rule_u.destination_netmask);
+    rule.destination_port = port_int_to_str(rule_u.destination_port);
+    rule.protocol = get_protocol_to_str(rule_u.protocol);
+    rule.action = get_action_to_str(rule_u.action);
+}
+
 bool add_rule (void) {
 
     char *buff;
@@ -84,14 +97,43 @@ bool add_rule (void) {
 }
 
 void print_rule () {
-   printf("in out %d\n", rule.inbound_outbound);
-   printf("source ip %s\n", rule.source_ip);
-   printf("source netmask %s\n", rule.source_netmask);
-   printf("source port %s\n", rule.source_port);
-   printf("destination ip %s\n", rule.destination_ip);
-   printf("destination netmask %s\n", rule.destination_netmask);
-   printf("destination port %s\n", rule.destination_port);
-   printf("rule action %s\n", rule.action);
+    printf("%d  ", num);
+    printf("%d  ", rule.inbound_outbound);
+    printf("%s  ", rule.source_ip);
+    printf("%s  ", rule.source_netmask);
+    printf("%s  ", rule.source_port);
+    printf("%s  ", rule.destination_ip);
+    printf("%s  ", rule.destination_netmask);
+    printf("%s  ", rule.destination_port);
+    printf("%s  ", rule.protocol);
+    printf("%s\n", rule.action);
+}
+
+void print_firewall_rules () {
+    char *line = NULL;
+    ssize_t len;
+    ssize_t read;
+
+    FILE *fd = open_fd("/proc/firewall", "r");
+
+    while ((read = getline(&line, &len, fd)) != -1) {
+        sscanf(line, "%d %c %d %d %d %d %d %d %c %c\n", &num,
+            &rule_u.inbound_outbound,
+            &rule_u.source_ip,
+            &rule_u.source_netmask,
+            &rule_u.source_port,
+            &rule_u.destination_ip,
+            &rule_u.destination_netmask,
+            &rule_u.destination_port,
+            &rule_u.protocol,
+            &rule_u.action);
+
+        convert_rule_from_u();
+        print_rule();
+    }
+
+    close_fd(fd);
+    if (line) free(line);
 }
 
 
@@ -178,12 +220,9 @@ int main(int argc, char **argv) {
         }
     }
 
-    printf("action to be executed is: %d\n", action);
-    print_rule();
-
     switch (action) {
         case 0:
-            print_rule();
+            print_firewall_rules();
             break;
         case 1:
             delete_rule();
