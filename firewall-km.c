@@ -108,15 +108,33 @@ ssize_t rule_write(struct file *filp, const char *buff,
 
 ssize_t rule_read(struct file *filp, char __user *buff,
                         size_t len, loff_t *offp ) {
-    int length;
+    int length = 0;
+    struct mf_rule *rule_u;
+    int i = 0;
+    char *buffer;
+    buffer = (char *) vmalloc(sizeof(char) * 1024);
+
     if (*offp > 0) {
         return 0;
     }
 
-    //length = sprintf(buff, "%s\n", );
+    list_for_each_entry(rule_u, &policy_list.list, list) {
+        i++;
+        length += sprintf(buffer + length, "%d %c %d %d %d %d %d %d %c %c\n", i,
+                          rule_u->inbound_outbound,
+                          rule_u->source_ip,
+                          rule_u->source_netmask,
+                          rule_u->source_port,
+                          rule_u->destination_ip,
+                          rule_u->destination_netmask,
+                          rule_u->destination_port,
+                          rule_u->protocol,
+                          rule_u->action);
 
+    }
+
+    length = sprintf(buff, "%s", buffer);
     (*offp) += length;
-
     return length;
 }
 
