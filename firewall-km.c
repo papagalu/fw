@@ -4,6 +4,13 @@
 #include <linux/string.h>
 #include <linux/vmalloc.h>
 #include <linux/uaccess.h>
+#include <linux/list.h>
+#include <linux/udp.h>
+#include <linux/tcp.h>
+#include <linux/skbuff.h>
+#include <linux/ip.h>
+#include <linux/netfilter.h>
+#include <linux/netfilter_ipv4.h>
  
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("hello");
@@ -30,11 +37,45 @@ static struct mf_rule policy_list;
 static char *rule_buffer;
 
 void add_rule (void) {
+    struct mf_rule *rule_u;
+    rule_u = vmalloc(sizeof(struct mf_rule));
 
+    if (rule_u == NULL) {
+        printk(KERN_INFO "error: cannot allocate memory for a_new_rule\n");
+        return;
+    }
+
+    sscanf(rule_buffer, "a %c %d %d %d %d %d %d %c %c\n",
+            &(rule_u->inbound_outbound),
+            &(rule_u->source_ip),
+            &(rule_u->source_netmask),
+            &(rule_u->source_port),
+            &(rule_u->destination_ip),
+            &(rule_u->destination_netmask),
+            &(rule_u->destination_port),
+            &(rule_u->protocol),
+            &(rule_u->action));
+
+    INIT_LIST_HEAD(&(rule_u->list));
+    list_add_tail(&(rule_u->list), &(policy_list.list));
 }
 
 void delete_rule (void) {
+    int rule_number;
+    int i = 0;
+    struct list_head *p, *q;
+    struct mf_rule *rule_u;
 
+    sscanf(rule_buffer, "d %d\n", &rule_number);
+    list_for_each_safe(p, q, &policy_list.list) {
+        ++i;
+        if (i == rule_number) {
+            rule_u = list_entry(p, struct mf_rule, list);
+            list_del(p);
+            kfree(rule_u);
+            return;
+        }
+    }
 }
 
 ssize_t rule_write(struct file *filp, const char *buff,
@@ -55,7 +96,7 @@ ssize_t rule_write(struct file *filp, const char *buff,
             add_rule();
             break;
         case 'd':
-            printk(KERN_INFO "firewall: Deleting rule\n");
+            printk(KERN_INFO "firewall: Deleting rule!\n");
             delete_rule();
             break;
         default :
@@ -98,6 +139,7 @@ int init_firewall_module( void ) {
             vfree(rule_buffer);
             printk(KERN_INFO "firewall: Couldn't create proc entry\n");
         } else {
+            INIT_LIST_HEAD(&(policy_list.list));
             printk(KERN_INFO "firewall: Module loaded.\n");
         }
     }
@@ -105,8 +147,16 @@ int init_firewall_module( void ) {
 }
  
 void cleanup_firewall_module( void ) {
-    remove_proc_entry("firewall", NULL);
+    struct list_head *p, *q;
+    struct mf_rule *rule_u;
     vfree(rule_buffer);
+    list_for_each_safe(p, q, &policy_list.list) {
+        printk(KERN_INFO "free one\n");
+        rule_u = list_entry(p, struct mf_rule, list);
+        list_del(p);
+        vfree(rule_u);
+    }
+    remove_proc_entry("firewall", NULL);
     printk(KERN_INFO "firewall: Module unloaded.\n");
 }
  
