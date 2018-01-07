@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-unsigned int port_str_to_int(char *port_str) {
+unsigned int port_str_to_int (char *port_str) {
 
     unsigned int port = 0;
     int i = 0;
@@ -20,7 +20,7 @@ unsigned int port_str_to_int(char *port_str) {
     return port;
 }
 
-char *port_int_to_str(unsigned int port) {
+char *port_int_to_str (unsigned int port) {
     int digits = 1;
     if (port < 0) return NULL;
     while (port > 9) {
@@ -34,10 +34,14 @@ char *port_int_to_str(unsigned int port) {
     return t_str;
 }
 
-unsigned int ip_str_to_int(char *ip) {
+unsigned int ip_str_to_int (char *ip) {
     unsigned v = 0;
     int i;
     const char * start;
+
+    if(NULL == ip) {
+        return 0;
+    }
 
     start = ip;
     for (i = 0; i < 4; i++) {
@@ -67,7 +71,7 @@ unsigned int ip_str_to_int(char *ip) {
 }
 
 
-char *ip_int_to_str(unsigned int ip) {
+char *ip_int_to_str (unsigned int ip) {
     unsigned char bytes[4];
 
     bytes[0] = ip & 0xFF;
@@ -82,7 +86,7 @@ char *ip_int_to_str(unsigned int ip) {
     return ip_str;
 }
 
-bool check_ip_integrity(unsigned int ip1, unsigned int ip2, unsigned int mask) {
+bool check_ip_integrity (unsigned int ip1, unsigned int ip2, unsigned int mask) {
 
     if ((ip1 & mask) == (ip2 & mask)) {
         return true;
@@ -90,3 +94,80 @@ bool check_ip_integrity(unsigned int ip1, unsigned int ip2, unsigned int mask) {
         return false;
     }
 }
+
+char * get_protocol_to_str (int option) {
+    char *buff = malloc(sizeof(char) * 4);
+    switch(option) {
+        case 0:
+            sprintf(buff, "ALL");
+            break;
+        case 1:
+            sprintf(buff, "TCP");
+            break;
+        case 2:
+            sprintf(buff, "TCP");
+            break;
+        default:
+            free(buff);
+            buff = NULL;
+    }
+    return buff;
+}
+
+unsigned int get_protocol_to_int (char *str) {
+     if (NULL == str) {
+        return -1;
+    }
+    int ret = -1;
+    switch (str[0]) {
+        case 'A':
+            ret = 0;
+            break;
+        case 'T':
+            ret = 1;
+            break;
+        case 'U':
+            ret = 2;
+            break;
+        default:
+            ret = -1;
+            break;
+    }
+    return ret;
+}
+
+char * get_action_to_str (int option) {
+    char *buff = malloc(sizeof(char) * 10);
+    switch(option) {
+        case 0:
+            sprintf(buff, "BLOCK");
+            break;
+        case 1:
+            sprintf(buff, "UNBLOCK");
+            break;
+        default:
+            free(buff);
+            buff = NULL;
+    }
+    return buff;
+}
+
+unsigned int get_action_to_int (char *str) {
+    if (NULL == str) {
+        return -1;
+    }
+    int ret = -1;
+    switch (str[0]) {
+        case 'B':
+            ret = 0;
+            break;
+        case 'U':
+            ret = 1;
+            break;
+        default:
+            ret = -1;
+            break;
+    }
+    return ret;
+}
+

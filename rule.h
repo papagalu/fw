@@ -11,6 +11,18 @@ typedef struct rule_struct {
     char *destination_port;
     char *protocol;
     char *action;
-}rule_struct;
+} rule_struct;
+
+typedef struct rule_struct_u {
+    unsigned char inbound_outbound;
+    unsigned int source_ip;
+    unsigned int source_netmask;
+    unsigned int source_port;
+    unsigned int destination_ip;
+    unsigned int destination_netmask;
+    unsigned int destination_port;
+    unsigned char protocol;
+    unsigned char action;
+} rule_struct_u;
 
 #endif

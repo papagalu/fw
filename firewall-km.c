@@ -45,7 +45,7 @@ ssize_t rule_write(struct file *filp, const char *buff,
         return -ENOSPC;
     }
  
-    if (copy_from_user( &rule_buffer, buff, len )) {
+    if (copy_from_user( rule_buffer, buff, len )) {
         return -EFAULT;
     }
 

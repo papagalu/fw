@@ -6,16 +6,80 @@
 #include "utils.h"
 
 struct rule_struct rule;
+struct rule_struct_u rule_u;
+char *rule_number;
 
-bool send_to_firewall () {
-    return false;
+FILE * open_fd (char *path, char *permissions) {
+    FILE *fd = fopen(path, permissions);
+    if( NULL == fd ) {
+        printf("Cannot open %s\n", path);
+        return NULL;
+    }
+    return fd;
 }
 
-bool delete_rule () {
-    return false;
+void close_fd (FILE *fd) {
+    fclose(fd);
 }
 
-bool add_rule () {
+bool send_to_firewall (char *str) {
+
+    FILE *fd = open_fd("/proc/firewall", "w");
+    if (NULL == fd) { return false; }
+
+    fprintf(fd, "%s", str);
+    close_fd(fd);
+
+    return true;
+}
+
+bool delete_rule (void) {
+    char *buff;
+    int len = 0;
+    buff = malloc(sizeof(char) * 10);
+
+    len = sprintf(buff, "d %s\n", rule_number);
+    if (0 == len) {return false;}
+    send_to_firewall(buff);
+
+    free(buff);
+    return true;
+}
+
+void convert_rule_to_u (void) {
+    rule_u.inbound_outbound = rule.inbound_outbound;
+    rule_u.source_ip = ip_str_to_int(rule.source_ip);
+    rule_u.source_netmask = ip_str_to_int(rule.source_netmask);
+    rule_u.source_port = port_str_to_int(rule.source_port);
+    rule_u.destination_ip = ip_str_to_int(rule.destination_ip);
+    rule_u.destination_netmask = ip_str_to_int(rule.destination_netmask);
+    rule_u.destination_port = port_str_to_int(rule.destination_port);
+    rule_u.protocol = get_protocol_to_int(rule.protocol);
+    rule_u.action = get_action_to_int(rule.action);
+}
+
+bool add_rule (void) {
+
+    char *buff;
+    int len = 0;
+    buff = malloc(sizeof(char) * 1024);
+
+    convert_rule_to_u();
+    sprintf(buff, "a %d %d %d %d %d %d %d %d %d\n",
+            rule_u.inbound_outbound,
+            rule_u.source_ip,
+            rule_u.source_netmask,
+            rule_u.source_port,
+            rule_u.destination_ip,
+            rule_u.destination_netmask,
+            rule_u.destination_port,
+            rule_u.protocol,
+            rule_u.action);
+
+    send_to_firewall(buff);
+    printf("sent to firewall:\n\t%s", buff);
+
+    free(buff);
     return false;
 }
 
@@ -60,11 +124,12 @@ int main(int argc, char **argv) {
         { "destination-netmask",   required_argument, NULL,           'x' },
         { "destination-port",      required_argument, NULL,           'c' },
         { "action",                required_argument, NULL,           'v' },
+        { "rule_number",           required_argument, NULL,           'n' },
 
         { 0, 0, 0, 0 }
     };
 
-    while ((c = getopt_long(argc, argv, "a:d:s:f:u:", longopts, NULL)) != -1) {
+    while ((c = getopt_long(argc, argv, "pda:q:w:e:z:x:c:v:n:", longopts, NULL)) != -1) {
         switch (c) {
             case 'p': // print the rules of our firewall
                 action = 0;
@@ -95,6 +160,9 @@ int main(int argc, char **argv) {
                 break;
             case 'v':
                 rule.action = optarg;
+                break;
+            case 'n':
+                rule_number = optarg;
                 break;
             case 0:     /* getopt_long() set a variable, just keep going */
                 break;
