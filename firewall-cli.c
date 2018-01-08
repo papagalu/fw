@@ -60,7 +60,7 @@ void convert_rule_to_u (void) {
 }
 
 void convert_rule_from_u (void) {
-    rule.inbound_outbound = rule_u.inbound_outbound - '0';
+    rule.inbound_outbound = rule_u.inbound_outbound;
     rule.source_ip = ip_int_to_str(rule_u.source_ip);
     rule.source_netmask = ip_int_to_str(rule_u.source_netmask);
     rule.source_port = port_int_to_str(rule_u.source_port);
@@ -75,7 +75,7 @@ bool add_rule (void) {
 
     char *buff;
     int len = 0;
-    buff = malloc(sizeof(char) * 1024);
+    buff = malloc(sizeof(char) * 2048);
 
     convert_rule_to_u();
     sprintf(buff, "a %d %d %d %d %d %d %d %d %d\n",
@@ -90,7 +90,6 @@ bool add_rule (void) {
             rule_u.action);
 
     send_to_firewall(buff);
-    printf("sent to firewall:\n\t%s", buff);
 
     free(buff);
     return false;
@@ -117,7 +116,7 @@ void print_firewall_rules () {
     FILE *fd = open_fd("/proc/firewall", "r");
 
     while ((read = getline(&line, &len, fd)) != -1) {
-        sscanf(line, "%d %c %d %d %d %d %d %d %c %c\n", &num,
+        sscanf(line, "%d %hhu %d %d %d %d %d %d %hhu %hhu\n", &num,
             &rule_u.inbound_outbound,
             &rule_u.source_ip,
             &rule_u.source_netmask,
@@ -165,6 +164,7 @@ int main(int argc, char **argv) {
         { "destination-ip",        required_argument, NULL,           'z' },
         { "destination-netmask",   required_argument, NULL,           'x' },
         { "destination-port",      required_argument, NULL,           'c' },
+        { "protocol",              required_argument, NULL,           'b' },
         { "action",                required_argument, NULL,           'v' },
         { "rule_number",           required_argument, NULL,           'n' },
 
@@ -199,6 +199,9 @@ int main(int argc, char **argv) {
                 break;
             case 'c':
                 rule.destination_port = optarg;
+                break;
+            case 'b':
+                rule.protocol = optarg;
                 break;
             case 'v':
                 rule.action = optarg;
