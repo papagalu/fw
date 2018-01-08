@@ -115,7 +115,7 @@ char * get_protocol_to_str (int option) {
 
 unsigned int get_protocol_to_int (char *str) {
      if (NULL == str) {
-        return -1;
+        return 0;
     }
     int ret = -1;
     switch (str[0]) {
@@ -129,7 +129,7 @@ unsigned int get_protocol_to_int (char *str) {
             ret = 2;
             break;
         default:
-            ret = -1;
+            ret = 0;
             break;
     }
     return ret;
