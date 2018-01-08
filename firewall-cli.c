@@ -7,8 +7,34 @@
 
 struct rule_struct rule;
 struct rule_struct_u rule_u;
+
 char *rule_number;
 int num;
+
+void print_help (void) {
+    printf("fw - small firewall\n");
+    printf("\nUsage:\n");
+    printf("\tfw --add --in --source-ip 192.168.1.3 --action BLOCK\n");
+    printf("\tfw --print\n");
+    printf("\tfw --delete --rule-number 2\n");
+    printf("\tfw --help\n");
+    printf("Flags:\n");
+    printf("\t--help                | -h  : prints this help message\n");
+    printf("\t--delete              | -d  : deletes a rule from the firewall\n");
+    printf("\t--add                 | -a  : adds a rule to the firewall\n");
+    printf("\t--print               | -p  : prints all the rules in the firewall\n");
+    printf("\t--in                        : specifies if the rule is inbound\n");
+    printf("\t--out                       : specifies if the rule is outbound\n");
+    printf("\t--source-ip           | -q  : specifies the source ip of the package\n");
+    printf("\t--source-netmask      | -w  : specifies the netmask of the source ip\n");
+    printf("\t--source-port         | -e  : specifies the port from which the package is coming from\n");
+    printf("\t--destination-ip      | -z  : specifies the destination ip of the package\n");
+    printf("\t--destination-netmask | -x  : specifies the netmask of the destination ip\n");
+    printf("\t--destination-port    | -c  : specifies the port to which the package is going\n");
+    printf("\t--protocol            | -b  : specifies the protocol ALL | TCP | UDP\n");
+    printf("\t--action              | -v  : specifies the action the firewall should take BLOCK | UNBLOCK\n");
+    printf("\t--rule-number         | -n  : specifies which rule should be deleted from the firewall\n");
+}
 
 FILE * open_fd (char *path, char *permissions) {
     FILE *fd = fopen(path, permissions);
@@ -157,6 +183,7 @@ int main(int argc, char **argv) {
         { "print",                 no_argument,       NULL,           'p' },
         { "delete",                no_argument,       NULL,           'd' },
         { "add",                   no_argument,       NULL,           'a' },
+        { "help",                  no_argument,       NULL,           'h' },
 
         { "source-ip",             required_argument, NULL,           'q' },
         { "source-netmask",        required_argument, NULL,           'w' },
@@ -166,12 +193,12 @@ int main(int argc, char **argv) {
         { "destination-port",      required_argument, NULL,           'c' },
         { "protocol",              required_argument, NULL,           'b' },
         { "action",                required_argument, NULL,           'v' },
-        { "rule_number",           required_argument, NULL,           'n' },
+        { "rule-number",           required_argument, NULL,           'n' },
 
         { 0, 0, 0, 0 }
     };
 
-    while ((c = getopt_long(argc, argv, "pda:q:w:e:z:x:c:v:n:", longopts, NULL)) != -1) {
+    while ((c = getopt_long(argc, argv, "pdah:q:w:e:z:x:c:v:n:", longopts, NULL)) != -1) {
         switch (c) {
             case 'p': // print the rules of our firewall
                 action = 0;
@@ -181,6 +208,9 @@ int main(int argc, char **argv) {
                 break;
             case 'a': // add a rule to our firewall
                 action = 2;
+                break;
+            case 'h': //prints the help message
+                action = 3;
                 break;
             case 'q':
                 rule.source_ip = optarg;
@@ -232,6 +262,9 @@ int main(int argc, char **argv) {
             break;
         case 2:
             add_rule();
+            break;
+        case 3:
+            print_help();
             break;
         default:
             break;
