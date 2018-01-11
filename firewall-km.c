@@ -14,7 +14,7 @@
 
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("hello");
-MODULE_AUTHOR("papagalu");
+MODULE_AUTHOR("Bocereg Alexandra/Dimitrie Mititelu(papagalu)");
  
 #define MAX_RULE_LENGTH       PAGE_SIZE
 static struct proc_dir_entry *proc_entry;
@@ -88,7 +88,7 @@ void add_rule (void) {
         return;
     }
 
-    sscanf(rule_buffer, "a %d %d %d %d %d %d %d %d %d\n",
+    sscanf(rule_buffer, "a %d %u %u %d %u %u %d %d %d\n",
             &(rule_u->inbound_outbound),
             &(rule_u->source_ip),
             &(rule_u->source_netmask),
@@ -108,9 +108,17 @@ void delete_rule (void) {
     int i = 0;
     struct list_head *p, *q;
     struct mf_rule *rule_u;
-
-    sscanf(rule_buffer, "d %d\n", &rule_number);
-
+    
+    if(sscanf(rule_buffer, "d %d\n", &rule_number)!=1){
+      //not a number given, but add/ADD
+      if((strncasecmp(rule_buffer,"d all",5)==0)||(strncasecmp(rule_buffer,"d ALL",5)==0)){
+	list_for_each_safe(p,q,&policy_list.list){
+	  rule_u = list_entry(p,struct mf_rule,list);
+	  list_del(p);
+	  vfree(rule_u);
+	}
+      }
+    }else{
     list_for_each_safe(p, q, &policy_list.list) {
         ++i;
         if (i == rule_number) {
@@ -118,6 +126,7 @@ void delete_rule (void) {
             list_del(p);
             vfree(rule_u);
         }
+    }
     }
 }
 
@@ -163,7 +172,7 @@ ssize_t rule_read(struct file *filp, char __user *buff,
 
     list_for_each_entry(rule_u, &policy_list.list, list) {
         i++;
-        length += sprintf(buffer + length, "%d %d %d %d %d %d %d %d %d %d\n", i,
+        length += sprintf(buffer + length, "%d %d %u %u %d %u %u %d %d %d\n", i,
                           rule_u->inbound_outbound,
                           rule_u->source_ip,
                           rule_u->source_netmask,
@@ -198,7 +207,7 @@ unsigned int hook_func_in(void *priv, struct sk_buff *skb, const struct nf_hook_
 
     unsigned int src_ip = (unsigned int) ip_hdr->saddr;
     unsigned int dest_ip = (unsigned int) ip_hdr->daddr;
-    unsigned int src_port,dest_port;
+    unsigned int src_port = 0 ,dest_port = 0;
 
     if (ip_hdr->protocol==17){
         udp_hdr = (struct udphdr *)(skb_transport_header(skb)+20);
@@ -271,7 +280,7 @@ unsigned int hook_func_out(void *priv, struct sk_buff *skb, const struct nf_hook
 
     unsigned int src_ip = (unsigned int) ip_hdr->saddr;
     unsigned int dest_ip = (unsigned int) ip_hdr->daddr;
-    unsigned int src_port,dest_port;
+    unsigned int src_port = 0, dest_port = 0;
 
     if (ip_hdr->protocol==17){
         udp_hdr = (struct udphdr *)skb_transport_header(skb);
