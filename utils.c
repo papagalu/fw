@@ -22,17 +22,16 @@ unsigned int port_str_to_int (char *port_str) {
 
 char *port_int_to_str (unsigned int port) {
     int digits = 1;
+    int temp=port;
     if (port < 0) return NULL;
     while (port > 9) {
         port /= 10;
         digits++;
     }
-
     char *t_str = malloc(sizeof(char) * digits);
-    sprintf(t_str, "%d", port);
-
+    sprintf(t_str, "%d", temp);
     return t_str;
-}
+    }
 
 unsigned int ip_str_to_int (char *ip) {
     unsigned v = 0;

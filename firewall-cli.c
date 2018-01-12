@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <stdbool.h>
+
 #include "rule.h"
 #include "utils.h"
 
@@ -33,7 +34,7 @@ void print_help (void) {
     printf("\t--destination-port    | -c  : specifies the port to which the package is going\n");
     printf("\t--protocol            | -b  : specifies the protocol ALL | TCP | UDP\n");
     printf("\t--action              | -v  : specifies the action the firewall should take BLOCK | UNBLOCK\n");
-    printf("\t--rule-number         | -n  : specifies which rule should be deleted from the firewall\n");
+    printf("\t--rule-number         | -n  : specifies which rule should be deleted from the firewall or ALL for deleting all the added rules\n");
 }
 
 FILE * open_fd (char *path, char *permissions) {
@@ -64,7 +65,6 @@ bool delete_rule (void) {
     char *buff;
     int len = 0;
     buff = malloc(sizeof(char) * 10);
-
     len = sprintf(buff, "d %s\n", rule_number);
     if (0 == len) {return false;}
     send_to_firewall(buff);
@@ -89,10 +89,10 @@ void convert_rule_from_u (void) {
     rule.inbound_outbound = rule_u.inbound_outbound;
     rule.source_ip = ip_int_to_str(rule_u.source_ip);
     rule.source_netmask = ip_int_to_str(rule_u.source_netmask);
-    rule.source_port = port_int_to_str(rule_u.source_port);
+    rule.source_port= port_int_to_str(rule_u.source_port);
     rule.destination_ip = ip_int_to_str(rule_u.destination_ip);
     rule.destination_netmask = ip_int_to_str(rule_u.destination_netmask);
-    rule.destination_port = port_int_to_str(rule_u.destination_port);
+    rule_u.destination_port=port_int_to_str(rule_u.destination_port);
     rule.protocol = get_protocol_to_str(rule_u.protocol);
     rule.action = get_action_to_str(rule_u.action);
 }
@@ -104,7 +104,7 @@ bool add_rule (void) {
     buff = malloc(sizeof(char) * 2048);
 
     convert_rule_to_u();
-    sprintf(buff, "a %d %d %d %d %d %d %d %d %d\n",
+    sprintf(buff, "a %d %u %u %d %u %u %d %d %d\n",
             rule_u.inbound_outbound,
             rule_u.source_ip,
             rule_u.source_netmask,
@@ -114,13 +114,27 @@ bool add_rule (void) {
             rule_u.destination_port,
             rule_u.protocol,
             rule_u.action);
-
+    /*printf("Sent to firewall source_ip %u, destination ip %u, source netmask: %u, destination net mask: %u\n",rule_u.source_ip,rule_u.destination_ip,rule_u.source_netmask, rule_u.destination_netmask);
+    printf("What is sent to firewall converted back to ip string representation:\n");
+    printf("source_ip %s destination ip %s source netmask %s destination netmask %s\n",ip_int_to_str(rule_u.source_ip),ip_int_to_str(rule_u.destination_ip),ip_int_to_str(rule_u.source_netmask),ip_int_to_str(rule_u.destination_netmask)); */
     send_to_firewall(buff);
 
     free(buff);
     return false;
 }
+bool delete_all (void){
+    char *buff;
+    int len = 0;
+    buff = malloc(sizeof(char) * 10);
 
+    len = sprintf(buff, "d %s\n", rule_number);
+    if (0 == len) {return false;}
+    send_to_firewall(buff);
+
+    free(buff);
+    return true;
+  
+}
 void print_rule () {
     printf("%d  ", num);
     printf("%d  ", rule.inbound_outbound);
@@ -184,7 +198,7 @@ int main(int argc, char **argv) {
         { "delete",                no_argument,       NULL,           'd' },
         { "add",                   no_argument,       NULL,           'a' },
         { "help",                  no_argument,       NULL,           'h' },
-
+	
         { "source-ip",             required_argument, NULL,           'q' },
         { "source-netmask",        required_argument, NULL,           'w' },
         { "source-port",           required_argument, NULL,           'e' },
